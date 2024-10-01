@@ -127,18 +127,23 @@ class BotManager extends Manager
     {
         $item = Gallery::where('active', true)->orderBy('send_count', 'asc')->first();
 
-        $weather_api = new OpenWeather(env('OPEN_WEATHER_TOKKEN'), env('WEATHER_LANG'));
-        $weather = $weather_api->getWeather(env('CITY_LAT'), env('CITY_LON'));
-        $temp = floor($weather['main']['temp']);
-        $feels_like = floor($weather['main']['feels_like']);
+        try {
+            $weather_api = new OpenWeather(env('OPEN_WEATHER_TOKKEN'), env('WEATHER_LANG'));
+            $weather = $weather_api->getWeather(env('CITY_LAT'), env('CITY_LON'));
+            $temp = floor($weather['main']['temp']);
+            $feels_like = floor($weather['main']['feels_like']);
 
-        $this->telegram->sendMessage($this->chat_id, "
-			Время погоды на сегодня!\n
-			На улице сейчас {$weather['weather'][0]['description']} \n
-			Температура: {$temp}°C\n
-			Ощущается как {$feels_like}°C\n
-			На этом все, берегите себя и своих близких
-		");
+            $this->telegram->sendMessage($this->chat_id, "
+    			Время погоды на сегодня!\n
+    			На улице сейчас {$weather['weather'][0]['description']} \n
+    			Температура: {$temp}°C\n
+    			Ощущается как {$feels_like}°C\n
+    			На этом все, берегите себя и своих близких
+    		");
+        } catch (Exception $e) {
+            $this->telegram->sendMessage($this->chat_id, "Пошёл нахуй");
+        }
+
         $this->telegram->pushImage($this->chat_id, \Storage::disk('public')->get($item->image), basename($item->image));
 
         // Увеличиваем датчик отправки у картинки на 1
